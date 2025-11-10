@@ -4,12 +4,13 @@ pipeline {
     environment {
         AWS_REGION = 'ap-south-1'
         DOCKER_IMAGE = 'aws-cicd-demo'
-        ECR_REPO = '356712705564.dkr.ecr.ap-south-1.amazonaws.com/aws-cicd-demo'  // Replace with your actual ECR repo URI
-        EC2_HOST = 'ec2-user@<EC2-PUBLIC-IP>'  // Replace with your EC2 public IP or DNS
-        KEY_PATH = 'C:\\Users\\darsh\\Downloads\\your-key.pem'  // Replace with correct PEM path
+        ECR_REPO = '356712705564.dkr.ecr.ap-south-1.amazonaws.com/aws-cicd-demo'  // Your actual ECR repo URI
+        EC2_HOST = 'ec2-user@<EC2-PUBLIC-IP>'  // Replace with EC2 public IP or DNS
+        KEY_PATH = 'C:\\Users\\darsh\\Downloads\\your-key.pem'  // Use double \\ for Windows paths
     }
 
     stages {
+
         stage('Checkout SCM') {
             steps {
                 echo '📦 Checking out source code from GitHub...'
@@ -21,7 +22,7 @@ pipeline {
             steps {
                 echo '🐳 Building Docker image...'
                 script {
-                    bat "docker build -t %DOCKER_IMAGE% ."
+                    bat "docker build -t ${DOCKER_IMAGE} ."
                 }
             }
         }
@@ -32,7 +33,7 @@ pipeline {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
                     script {
                         bat """
-                        aws ecr get-login-password --region %AWS_REGION% | docker login --username AWS --password-stdin %ECR_REPO%
+                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPO}
                         """
                     }
                 }
@@ -44,8 +45,8 @@ pipeline {
                 echo '⬆️ Pushing Docker image to ECR...'
                 script {
                     bat """
-                    docker tag %DOCKER_IMAGE%:latest %ECR_REPO%:latest
-                    docker push %ECR_REPO%:latest
+                    docker tag ${DOCKER_IMAGE}:latest ${ECR_REPO}:latest
+                    docker push ${ECR_REPO}:latest
                     """
                 }
             }
@@ -56,7 +57,7 @@ pipeline {
                 echo '🚀 Deploying container on EC2...'
                 script {
                     bat """
-                    echo y | plink -i "%KEY_PATH%" %EC2_HOST% "docker pull %ECR_REPO%:latest && docker stop myapp || true && docker rm myapp || true && docker run -d -p 5000:5000 --name myapp %ECR_REPO%:latest"
+                    echo y | plink -i "${KEY_PATH}" ${EC2_HOST} "docker pull ${ECR_REPO}:latest && docker stop myapp || true && docker rm myapp || true && docker run -d -p 5000:5000 --name myapp ${ECR_REPO}:latest"
                     """
                 }
             }
