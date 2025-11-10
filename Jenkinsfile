@@ -23,7 +23,7 @@ pipeline {
                 echo 'Running Docker container...'
                 script {
                     bat """
-                    docker run -d -p 8080:8080 ${DOCKER_IMAGE}:${DOCKER_TAG}
+                    docker run -d -p 8081:8080 ${DOCKER_IMAGE}:${DOCKER_TAG}
                     """
                 }
             }
