@@ -1,27 +1,42 @@
 pipeline {
     agent any
 
-    stages {
-        stage('Clone Repository') {
-            steps {
-                git 'https://github.com/darshan2004s/jenkins-docker-demo.git'
-            }
-        }
+    environment {
+        DOCKER_IMAGE = 'aws-cicd-demo'
+        DOCKER_TAG = 'latest'
+    }
 
+    stages {
         stage('Build Docker Image') {
             steps {
+                echo 'Building Docker image...'
                 script {
-                    docker.build('jenkins-docker-demo')
+                    bat """
+                    docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                    """
                 }
             }
         }
 
         stage('Run Container') {
             steps {
+                echo 'Running Docker container...'
                 script {
-                    sh 'docker run -d -p 5000:5000 jenkins-docker-demo'
+                    bat """
+                    docker run -d -p 8080:8080 ${DOCKER_IMAGE}:${DOCKER_TAG}
+                    """
                 }
             }
         }
     }
+
+    post {
+        success {
+            echo '✅ Build and container deployment successful!'
+        }
+        failure {
+            echo '❌ Build failed! Check the console logs for details.'
+        }
+    }
 }
+
