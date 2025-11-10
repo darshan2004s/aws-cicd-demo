@@ -4,40 +4,48 @@ pipeline {
     environment {
         AWS_REGION = 'ap-south-1'
         DOCKER_IMAGE = 'aws-cicd-demo'
-        ECR_REPO = 'YOUR_ECR_REPO_URI'  // e.g., 1234567890.dkr.ecr.ap-south-1.amazonaws.com/aws-cicd-demo
+        ECR_REPO = '356712705564.dkr.ecr.ap-south-1.amazonaws.com/aws-cicd-demo'  // Replace with your actual ECR repo URI
+        EC2_HOST = 'ec2-user@<EC2-PUBLIC-IP>'  // Replace with your EC2 public IP or DNS
+        KEY_PATH = 'C:\\Users\\darsh\\Downloads\\your-key.pem'  // Replace with correct PEM path
     }
 
     stages {
         stage('Checkout SCM') {
             steps {
-                git 'https://github.com/darshan2004s/aws-cicd-demo.git'
+                echo '📦 Checking out source code from GitHub...'
+                git branch: 'main', url: 'https://github.com/darshan2004s/aws-cicd-demo.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
+                echo '🐳 Building Docker image...'
                 script {
-                    dockerImage = docker.build("${DOCKER_IMAGE}")
+                    bat "docker build -t %DOCKER_IMAGE% ."
                 }
             }
         }
 
         stage('Login to AWS ECR') {
             steps {
-                script {
-                    sh """
-                    aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
-                    """
+                echo '🔐 Logging into AWS ECR...'
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                    script {
+                        bat """
+                        aws ecr get-login-password --region %AWS_REGION% | docker login --username AWS --password-stdin %ECR_REPO%
+                        """
+                    }
                 }
             }
         }
 
         stage('Push to ECR') {
             steps {
+                echo '⬆️ Pushing Docker image to ECR...'
                 script {
-                    sh """
-                    docker tag ${DOCKER_IMAGE}:latest ${ECR_REPO}:latest
-                    docker push ${ECR_REPO}:latest
+                    bat """
+                    docker tag %DOCKER_IMAGE%:latest %ECR_REPO%:latest
+                    docker push %ECR_REPO%:latest
                     """
                 }
             }
@@ -45,17 +53,22 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
+                echo '🚀 Deploying container on EC2...'
                 script {
-                    sh """
-                    ssh -i /path/to/your/key.pem ec2-user@<EC2-PUBLIC-IP> "
-                        docker pull ${ECR_REPO}:latest &&
-                        docker stop myapp || true &&
-                        docker rm myapp || true &&
-                        docker run -d -p 5000:5000 --name myapp ${ECR_REPO}:latest
-                    "
+                    bat """
+                    echo y | plink -i "%KEY_PATH%" %EC2_HOST% "docker pull %ECR_REPO%:latest && docker stop myapp || true && docker rm myapp || true && docker run -d -p 5000:5000 --name myapp %ECR_REPO%:latest"
                     """
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ CI/CD pipeline executed successfully!'
+        }
+        failure {
+            echo '❌ Pipeline failed! Please check Jenkins logs.'
         }
     }
 }
