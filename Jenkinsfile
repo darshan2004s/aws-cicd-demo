@@ -6,7 +6,7 @@ pipeline {
         DOCKER_IMAGE = 'aws-cicd-demo'
         ECR_REPO = '356712705564.dkr.ecr.ap-south-1.amazonaws.com/aws-cicd-demo'  // Your actual ECR repo URI
         EC2_HOST = 'ubuntu@3.89.231.219'  // Replace with EC2 public IP or DNS
-        KEY_PATH = 'C:\\Users\\darsh\\Downloads\\jenkins-key-pair.ppk'
+        KEY_PATH = 'C:\\Users\\darsh\\Downloads\\cicdpipeline.ppk'
   // Use double \\ for Windows paths
     }
 
