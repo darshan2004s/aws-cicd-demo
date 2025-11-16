@@ -57,8 +57,14 @@ pipeline {
                 echo '🚀 Deploying container on EC2...'
                 script {
                     bat """
-                    echo y | plink -i "${KEY_PATH}" ${EC2_HOST} "docker pull ${ECR_REPO}:latest && docker stop myapp || true && docker rm myapp || true && docker run -d -p 5000:5000 --name myapp ${ECR_REPO}:latest"
-                    """
+                        echo y | "C:\\Program Files\\Putty\\plink.exe" -i "${KEY_PATH}" ${EC2_HOST} "
+                            docker pull ${ECR_REPO}:latest &&
+                            docker stop myapp || true &&
+                            docker rm myapp || true &&
+                            docker run -d -p 5000:5000 --name myapp ${ECR_REPO}:latest
+                        "
+                        """
+
                 }
             }
         }
