@@ -55,20 +55,15 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                echo '🚀 Deploying container on EC2...'
-                    script {
-                        bat """
-                            "C:\\Program Files\\PuTTY\\plink.exe" -i "${KEY_PATH}" ${EC2_HOST} "
-                            aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${ECR_REPO};
-                            docker pull ${ECR_REPO}:latest;
-                            docker stop myapp || true;
-                            docker rm myapp || true;
-                            docker run -d -p 5000:5000 --name myapp ${ECR_REPO}:latest
-                            "
-                        """
-                    }
+                echo "🚀 Deploying container on EC2..."
+                script {
+                    bat """
+                        "C:\\Program Files\\PuTTY\\plink.exe" -i "${KEY_PATH}" ${EC2_HOST} \"aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${ECR_REPO}; docker pull ${ECR_REPO}:latest; docker stop myapp || true; docker rm myapp || true; docker run -d -p 5000:5000 --name myapp ${ECR_REPO}:latest\"
+                    """
+                }
             }
         }
+
 
 
     }
