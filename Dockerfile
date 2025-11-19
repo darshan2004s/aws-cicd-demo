@@ -1,17 +1,14 @@
-# Base image
-FROM python:3.10-slim
+FROM node:18
 
-# Set working directory
 WORKDIR /app
 
-# Copy project files
+COPY package*.json ./
+
+# Non-interactive npm install
+RUN npm install --no-progress --no-audit --silent
+
 COPY . .
 
-# Install dependencies
-RUN pip install -r requirements.txt
+EXPOSE 3000
 
-# Expose port
-EXPOSE 5000
-
-# Run the app
-CMD ["python", "app.py"]
+CMD ["node", "server.js"]
